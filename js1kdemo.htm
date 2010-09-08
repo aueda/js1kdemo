@@ -6,7 +6,6 @@
 	</HEAD><BODY>
 		<CANVAS id="c"></CANVAS>
 		<SCRIPT>
-		  /* demo here */
 			var canvas=document.getElementById("c");
             var ctx = canvas.getContext("2d");
             var level = decompress("4 5#9 5 #3 #9 5 #$2 #9 3 3#2 $2#9 2 #2 $ $ #9 3# # 2# #3 7#3 # 2# 5#2 2.2# $2 $9  2.6# 3# #@2#2 2.#4 #5 9#4 7#8 ");
@@ -14,6 +13,7 @@
             var lwidth = 19;
             var lheight = 11;
             var pushes = 0;
+            var moves = 0;
             canvas.height = canvas.width = 450;
             document.onkeydown = keyDown;
             
@@ -32,32 +32,24 @@
                     ctx.fillText(level.substring(i * lwidth, (i * lwidth) + lwidth), 0, y);
                     y += 15;
                 }
-                
-                //if (gameOver())
-                //{
-                //    alert("game over");
-                //    return;
-                //}
-                
-                //document.write("ok");
             }
 
             function keyDown(evt)
             {
-                if (evt.keyCode==37) move((position%lwidth+1)!=2, position-1, position-2);
-                if (evt.keyCode==38) move(true, position-lwidth, position - (2*lwidth));
-                if (evt.keyCode==39) move(true, position+1, position+2);
-                if (evt.keyCode==40) move(position<(lwidth*lheight)-lwidth+1, position+lwidth, position+(2*lwidth));
-            }
-            
-            function gameOver()
-            {
-                return level.indexOf(".")==-1 && !isWarehouse();
+                if (!(level.indexOf(".")==-1 && !isWarehouse()))
+                {
+                    if (evt.keyCode==37) move(position-1, position-2);
+                    if (evt.keyCode==38) move(position-lwidth, position - (2*lwidth));
+                    if (evt.keyCode==39) move(position+1, position+2);
+                    if (evt.keyCode==40) move(position+lwidth, position+(2*lwidth));
+                } else {
+                    alert("game over\n\nmoves: " + moves + " pushes: " + pushes);
+                }
             }
             
             function isWarehouse()
             {
-                return ".%*".indexOf(level.charAt(position - 1)) > -1;
+                return ".*".indexOf(level.charAt(position - 1)) > -1;
             }
             
             function getChar(position)
@@ -70,7 +62,7 @@
                 level = level.substring(0, pos) + item + level.substring(pos + 1);
             }
             
-            function move(limit, nextPosition, otherPosition)
+            function move(nextPosition, otherPosition)
             {
                 var p = getChar(position);
                 var np = getChar(nextPosition);
@@ -80,49 +72,29 @@
                 {
                    if (np == '$' || np == '*')
                    {
-                        if (op != '#' && op != '$' && op != '!')
+                        if (op != '#' && op != '$' && op != '*')
                         {
                             setChar(op == ' ' ? '$' : op == '.' ? '*' : ' ', otherPosition);
                             setChar(np == '$' ? '@' : np == '*' ? '!' : '@', nextPosition);
                             setChar(p == '@' ? ' ' :  p == '!' ?  '.' : ' ', position);
                         
                             position = nextPosition;
+                            
+                            pushes++;
+                            moves++;
                         }
                    } else {
                         setChar(np == ' ' ? '@' : np == '.' ? '!' : ' ' , nextPosition);
                         setChar(p == '@' ? ' ' :  p == '!' ?  '.' : ' ', position);
 
-                       position = nextPosition;                                           
+                       position = nextPosition;
+                       
+                       pushes++;
+                       moves++;                                           
                    }
                 }                
             }
             
-            function dec(pkdLevel, width, length)
-            {
-                var unpkdLevel = new Array(width, length);
-                var x = 0;
-                var dx = 0, dy = 0;
-
-                for (var b = 0; b < pkdLevel.length; b++)
-                {
-                    x = parseInt(pkdLevel.charAt(b), 10);
-            
-                    if (x > 1 && x < 10)
-                    {
-                        b++;
-                        
-                        for (var y=1; y <= x; y++)
-                        {
-                            unpkdLevel[dy][dx] = pkdLevel.charAt(b);
-                        }
-                    } else {
-                        unpkdLevel[dy][dx] = pkdLevel.charAt(b);
-                    }
-                }
-
-                return unpkdLevel;
-            }
-                        
             function decompress(pkdLevel)
             {
                 var unpkdLevel = "", x;
@@ -144,8 +116,6 @@
                 }
                 return unpkdLevel;
             }
-
-        
-		</SCRIPT>
-			
-</BODY></HTML>
+        </SCRIPT>
+    </BODY>
+</HTML>
