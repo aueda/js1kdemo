@@ -5,116 +5,74 @@
 		<META charset="utf-8">
 	</HEAD><BODY>
 		<CANVAS id="c"></CANVAS>
+		<!--
+		  Sokoban level found in this sites:
+		  http://www.cs.cornell.edu/andru/xsokoban/other-pages.html
+		  
+		  This level was found in:
+		  http://hem.passagen.se/awl/ksokoban/extra_ksokoban_levels
+	    -->
 		<SCRIPT>
-			var canvas=document.getElementById("c");
-            var ctx = canvas.getContext("2d");
-            var level = decompress("4 5#9 5 #3 #9 5 #$2 #9 3 3#2 $2#9 2 #2 $ $ #9 3# # 2# #3 7#3 # 2# 5#2 2.2# $2 $9  2.6# 3# #@2#2 2.#4 #5 9#4 7#8 ");
-            var position = level.indexOf('@');
-            var lwidth = 19;
-            var lheight = 11;
-            var pushes = 0;
-            var moves = 0;
-            canvas.height = canvas.width = 450;
-            document.onkeydown = keyDown;
+			var c = document.getElementById("c");
+			var l = "   ##### ####.  ### $.$.  ##@$# #$ ## $. .  #####$#$ #  #. .  #  #######"; 
+            var u = l.indexOf('@'), w = 9, h = 8, pc = 0, mv = 0;
             
-            setInterval(draw, 10);
-           
-            function draw()
-            {
-                var y = 0;
-                ctx.textBaseline = "top";
-                ctx.font = "15px monospace";
-
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.onkeydown = function(e){
+                var kc = e.keyCode;
                 
-                for (var i = 0; i < lheight; i++)
+                if (!(l.indexOf(".")==-1 && !(".*".indexOf(l.charAt(u - 1)) > -1)))
                 {
-                    ctx.fillText(level.substring(i * lwidth, (i * lwidth) + lwidth), 0, y);
+                    if (kc==37) mz(u-1, u-2);
+                    if (kc==38) mz(u-w, u - (2*w));
+                    if (kc==39) mz(u+1, u+2);
+                    if (kc==40) mz(u+w, u+(2*w));
+                } else {
+                    alert("game over\n\nmv: " + mv + " pc: " + pc);
+                }            
+            };
+            
+            setInterval(function(){
+                var y = 0, k = c.getContext("2d");                
+                k.textBaseline = "top";
+                k.font = "15px monospace";
+                k.clearRect(0, 0, c.width, c.height);
+
+                for (var i = 0; i < h; i++)
+                {
+                    k.fillText(l.substring(i * w, (i * w) + w).replace("!", "@"), 0, y);
                     y += 15;
                 }
-            }
-
-            function keyDown(evt)
+            }, 10);
+   
+            function mz(nu, ou)
             {
-                if (!(level.indexOf(".")==-1 && !isWarehouse()))
-                {
-                    if (evt.keyCode==37) move(position-1, position-2);
-                    if (evt.keyCode==38) move(position-lwidth, position - (2*lwidth));
-                    if (evt.keyCode==39) move(position+1, position+2);
-                    if (evt.keyCode==40) move(position+lwidth, position+(2*lwidth));
-                } else {
-                    alert("game over\n\nmoves: " + moves + " pushes: " + pushes);
-                }
-            }
-            
-            function isWarehouse()
-            {
-                return ".*".indexOf(level.charAt(position - 1)) > -1;
-            }
-            
-            function getChar(position)
-            {
-                return level.charAt(position);
-            }
-            
-            function setChar(item, pos)
-            {
-                level = level.substring(0, pos) + item + level.substring(pos + 1);
-            }
-            
-            function move(nextPosition, otherPosition)
-            {
-                var p = getChar(position);
-                var np = getChar(nextPosition);
-                var op = getChar(otherPosition);
+                var g = function(p) { return l.charAt(p); }
+                var s = function(i, p) { l = l.substring(0, p) + i + l.substring(p + 1); } 
+                var p = g(u), np = g(nu), op = g(ou);
                                            
-                if (np != '#')
-                {
+               if (np != '#')
                    if (np == '$' || np == '*')
                    {
                         if (op != '#' && op != '$' && op != '*')
                         {
-                            setChar(op == ' ' ? '$' : op == '.' ? '*' : ' ', otherPosition);
-                            setChar(np == '$' ? '@' : np == '*' ? '!' : '@', nextPosition);
-                            setChar(p == '@' ? ' ' :  p == '!' ?  '.' : ' ', position);
+                            s(op == ' ' ? '$' : op == '.' ? '*' : ' ', ou);
+                            s(np == '$' ? '@' : np == '*' ? '!' : '@', nu);
+                            s(p == '@' ? ' ' :  p == '!' ?  '.' : ' ', u);
                         
-                            position = nextPosition;
+                            u = nu;
                             
-                            pushes++;
-                            moves++;
+                            pc++;
+                            mv++;
                         }
                    } else {
-                        setChar(np == ' ' ? '@' : np == '.' ? '!' : ' ' , nextPosition);
-                        setChar(p == '@' ? ' ' :  p == '!' ?  '.' : ' ', position);
-
-                       position = nextPosition;
+                        s(np == ' ' ? '@' : np == '.' ? '!' : ' ' , nu);
+                        s(p == '@' ? ' ' :  p == '!' ?  '.' : ' ', u);
+    
+                       u = nu;
                        
-                       pushes++;
-                       moves++;                                           
+                       pc++;
+                       mv++;                                           
                    }
-                }                
-            }
-            
-            function decompress(pkdLevel)
-            {
-                var unpkdLevel = "", x;
-                
-                for (var b=0; b<=(pkdLevel.length); b++)
-                {
-                    x = parseInt(pkdLevel.charAt(b), 10);
-            
-                    if (x > 1 && x < 10)
-                    {
-                        b++;
-                        for (var y=1; y<=x; y++)
-                        {
-                            unpkdLevel+=pkdLevel.charAt(b);
-                        }
-                    } else {
-                        unpkdLevel+=pkdLevel.charAt(b);
-                    }
-                }
-                return unpkdLevel;
             }
         </SCRIPT>
     </BODY>
